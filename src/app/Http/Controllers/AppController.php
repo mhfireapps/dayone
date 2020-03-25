@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
-use App\Respositories\AuthRespository;
-use App\Helpsrs\Curl;
+use App\Repositories\AuthRepository;
+use App\Helpers\ShopifyApi;
 
 class AppController extends BaseController
 {
 	protected $model;
-	public function __construct(AuthRespository $auth)
+	public function __construct(AuthRepository $auth)
 	{
 		$this->model = $auth;
 	}
@@ -40,30 +40,23 @@ class AppController extends BaseController
     public function auth(Request $request)
     {
     	$secret_key = env('SHARED_SECRET');
-    	$hmac = $request->get('hmac');
-    	$params = $_GET;
-    	$params = isset($params['hmac']) ? unset($params['hmac']) : $params;
-    	ksort($params);
-    	$pc_hmac = hash_hmac('sha256', http_build_query($params), $secret_key);
-		if (hash_equals($hmac, $pc_hmac)) {
+    	$api = new ShopifyApi();
+    	$api->setApiSecret($secret_key);
+    	$valid = $api->verifyRequest($_GET);
+
+		if ( $valid ) {
 			$code = $request->get('code');
-			$query = array(
-				'client_id' 	=> env('API_KEY'],
-				'client_secret' => $secret_key,
-				'code' 		    => $code
-			);
+			$api->setApiKey(env('API_KEY'));
 
 			$shop_name = isset($request->shop) ? $request->shop : '';
-			if ($shop_name) {
-				$access_token_url = 'https://' . $shop_name . '/admin/oauth/access_token';
-				$curl = new Curl();
-				$curl->setMethod(2);
-				$curl->setUsingJson(false);
-				$response = $curl->call($access_token_url, $query);
-
-				$response = json_decode($response, true);
-				if (isset($response['access_token'])) {
-
+			if ( $shop_name ) {
+				$api->setShop($shop_name);
+				$response = $api->requestAccess($code);
+				if ( isset($response['access_token']) ) {
+					$result = $this->model->saveAuth( array(
+						'store_url'    => $shop_name,
+						'access_token' => $response['access_token']
+					));
 				} else {
 					return 'OOPS! Something went wrong';
 				}

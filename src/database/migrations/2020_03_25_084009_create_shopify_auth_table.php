@@ -15,8 +15,8 @@ class CreateShopifyAuthTable extends Migration
     {
         Schema::create('shopify_auth', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('store_url', 30);
-            $table->string('access_token', 30);
+            $table->string('store_url', 255);
+            $table->string('access_token');
             $table->timestamps();
         });
     }
