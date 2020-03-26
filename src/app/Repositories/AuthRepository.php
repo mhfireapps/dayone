@@ -51,4 +51,20 @@ class AuthRepository
 
 		return $results;
 	}
+
+	/**
+	 * Delete stores
+	 * @param  string $store_url [description]
+	 * @return [type]            [description]
+	 */
+	public function deleteStores($store_url = '')
+	{
+		if (empty($store_url)) return false;
+
+		$row = $this->getAuth($store_url);
+		if ($row)
+			return $row->delete();
+
+		return false;
+	}
 }

@@ -46,6 +46,6 @@ class RegisterUninstallShopifyWebhook implements ShouldQueue
      */
     public function handle()
     {
-        //
+    
     }
 }

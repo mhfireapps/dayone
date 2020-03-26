@@ -10,6 +10,7 @@ use App\Helpers\ShopifyApi;
 class AppController extends BaseController
 {
 	protected $model;
+	
 	public function __construct(AuthRepository $auth)
 	{
 		$this->model = $auth;
