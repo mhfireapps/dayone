@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use Closure;
 use Exception;
+use stdClass;
 use Psr\Log\LogLevel;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Uri;
@@ -12,9 +13,18 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Request;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerAwareInterface;
+use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Exception\RequestException;
 
 class ShopifyApi implements LoggerAwareInterface
 {
+	/**
+     * API version pattern.
+     *
+     * @var string
+     */
+    const VERSION_PATTERN = '/([0-9]{4}-[0-9]{2})|unstable/';
+
 	protected $client;
 
 	/**
@@ -47,6 +57,12 @@ class ShopifyApi implements LoggerAwareInterface
 	 */
 	protected $logger;
 
+	/**
+	 * Version of API
+	 * @var [type]
+	 */
+	protected $version;
+
 	public function __construct(bool $private = false)
 	{
 		// Check it later
@@ -75,6 +91,30 @@ class ShopifyApi implements LoggerAwareInterface
 	public function getShop(): ?string
 	{
 		return $this->shop;
+	}
+
+	public function setVersion(string $version)
+	{
+		if (!preg_match(self::VERSION_PATTERN, $version)) {
+            throw new Exception('Version string must be of YYYY-MM or unstable');
+        }
+
+        $this->version = $version;
+	}
+
+	public function getVersion(): ?string
+	{
+		return $this->version;
+	}
+
+	protected function versionPath(string $uri): string
+	{
+		if ($this->version === null || 
+			preg_match(self::VERSION_PATTERN, $uri)) {
+			return $uri;
+		}
+
+		return preg_replace('/\/admin(\/api)?\//', "/admin/api/{$this->version}/", $uri);
 	}
 
 	/**
@@ -328,5 +368,139 @@ class ShopifyApi implements LoggerAwareInterface
         }
 
         return $obj;
+    }
+
+    /**
+     * Call API script_tags
+     * https://shopify.dev/docs/admin-api/rest/reference/online-store/scripttag
+     * 
+     * @param  string $type
+     * @param  array  $params
+     * @return 
+     */
+    public function verifyScriptsTag(string $type, array $params = array())
+    {
+    	if ($this->apiSecret === null || $this->apiKey === null) {
+            throw new Exception('API key or secret is missing');
+        }
+
+        $path = '/admin/api/script_tags.json';
+        $uri = $this->getBaseUri()->withPath($this->versionPath($path));
+        $this->log("[{$uri}:{$type}] Request params: " . json_encode($params));
+
+        $requestFn = function() use ($type, $uri, $params) {
+        	return $this->client->request($type, $uri, $params);
+        };
+
+        $successFn = function(ResponseInterface $resp) use ($uri, $type): stdClass {
+        	$body = $resp->getBody();
+        	$status = $resp->getStatusCode();
+        	$this->log("[{$uri}:{$type}] {$status}: " . json_encode($body));
+
+        	return (object) [
+        		'errors' 	=> false,
+        		'status' 	=> $status,
+        		'response' 	=> $resp,
+        		'body'     	=> $this->jsonDecode($body)
+        	];
+        };
+
+        $errorFn = function(RequestException $e) use ($uri, $type): stdClass {
+        	$resp = $e->getResponse();
+        	$body = $reqp->getBody();
+        	$status = $resp->getStatusCode();
+
+        	$body = $this->jsonDecode($body);
+        	if ($body) {
+        		if (isset($body->errors)) {
+        			$body = $body->errors;
+        		} else {
+        			$body = null;
+        		}
+        	}
+
+        	return (object) [
+        		'errors' 	=> true,
+        		'status' 	=> $status,
+        		'body'   	=> $body,
+        		'exception' => $e
+        	];
+        };
+
+        try {
+        	return $successFn($requestFn());
+        } catch( RequestException $e) {
+        	return $errorFn($e);
+        }
+    }
+
+    /**
+     * Runs a request to Shopify API
+     * @param  string $type 
+     * @param  string $path
+     * @param  array  $params
+     * @return stdClass|Promise
+     */
+    public function rest(string $type, string $path, array $params = null, array $headers = [])
+    {
+    	$uri = $this->getBaseUri()->withPath($this->versionPath($path));
+
+    	$apiParams = [];
+    	if ($params !== null) {
+    		$apiParams[strtolower($type) === 'get' ? 'query' : 'json'] = $params;
+    	}
+
+        $this->log("[{$uri}:{$type}] Request params: " . json_encode($params));
+
+        if (count($headers)) {
+        	$apiParams['headers'] = $headers;
+        }
+
+        $requestFn = function() use ($type, $uri, $apiParams) {
+        	return $this->client->request($type, $uri, $apiParams);
+        };
+
+        $successFn = function(ResponseInterface $resp) use ($uri, $type): stdClass {
+        	$body = $resp->getBody();
+        	$status = $resp->getStatusCode();
+        	$this->log("[{$uri}:{$type}] {$status}: " . json_encode($body));
+
+        	return (object) [
+        		'errors' 	=> false,
+        		'status' 	=> $status,
+        		'response' 	=> $resp,
+        		'body'     	=> $this->jsonDecode($body)
+        	];
+        };
+
+        $errorFn = function(RequestException $e) use ($uri, $type): stdClass {
+        	$resp = $e->getResponse();
+        	$body = $reqp->getBody();
+        	$status = $resp->getStatusCode();
+
+        	$body = $this->jsonDecode($body);
+        	if ($body) {
+        		if (isset($body->errors)) {
+        			$body = $body->errors;
+        		} elseif(isset($body->error)) {
+        			$body = $body->error;
+        		} else {
+        			$body = null;
+        		}
+        	}
+
+        	return (object) [
+        		'errors' 	=> true,
+        		'status' 	=> $status,
+        		'body'   	=> $body,
+        		'exception' => $e
+        	];
+        };
+
+        try {
+        	return $successFn($requestFn());
+        } catch( RequestException $e) {
+        	return $errorFn($e);
+        }
     }
 }

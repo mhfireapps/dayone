@@ -17,6 +17,7 @@ Route::get('/', function () {
 
 Route::get('/install', 'AppController@install');
 Route::get('/auth', 'AppController@auth');
+Route::get('/scripts-tag', 'AppController@scriptsTag');
 
 Route::group(['prefix' => 'webhook'], function() {
 	Route::post('/products', 'WebhookController@products')->middleware('webhook');

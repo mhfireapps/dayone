@@ -47,7 +47,8 @@ class AuthRepository
 		$results = $this->model
 					  ->where('store_url', $store_url)
 					  ->select('id', 'access_token')
-					  ->get();
+					  ->get()
+					  ->first();
 
 		return $results;
 	}

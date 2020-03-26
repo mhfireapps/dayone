@@ -10,7 +10,7 @@ use App\Helpers\ShopifyApi;
 class AppController extends BaseController
 {
 	protected $model;
-	
+
 	public function __construct(AuthRepository $auth)
 	{
 		$this->model = $auth;
@@ -23,10 +23,10 @@ class AppController extends BaseController
 	 */
     public function install(Request $request)
     {
-    	$shop_name = isset($request->shop) ? $request->shop : '';
-    	if ($shop_name) {
+    	$shopName = isset($request->shop) ? $request->shop : '';
+    	if ($shopName) {
     		$scopes = 'read_script_tags,write_script_tags';
-		    $url = 'https://'.$shop_name.'/admin/oauth/authorize?client_id='.env('API_KEY').'&scope='.$scopes.'&redirect_uri='.env('APP_URL').'/auth';
+		    $url = 'https://'.$shopName.'/admin/oauth/authorize?client_id='.env('API_KEY').'&scope='.$scopes.'&redirect_uri='.env('APP_URL').'/auth';
 		    return redirect($url);
     	}
 
@@ -40,22 +40,22 @@ class AppController extends BaseController
      */
     public function auth(Request $request)
     {
-    	$secret_key = env('SHARED_SECRET');
+    	$secretKey = env('SHARED_SECRET');
     	$api = new ShopifyApi();
-    	$api->setApiSecret($secret_key);
+    	$api->setApiSecret($secretKey);
     	$valid = $api->verifyRequest($_GET);
 
 		if ( $valid ) {
 			$code = $request->get('code');
 			$api->setApiKey(env('API_KEY'));
 
-			$shop_name = isset($request->shop) ? $request->shop : '';
-			if ( $shop_name ) {
-				$api->setShop($shop_name);
+			$shopName = isset($request->shop) ? $request->shop : '';
+			if ( $shopName ) {
+				$api->setShop($shopName);
 				$response = $api->requestAccess($code);
 				if ( isset($response['access_token']) ) {
 					$result = $this->model->saveAuth( array(
-						'store_url'    => $shop_name,
+						'store_url'    => $shopName,
 						'access_token' => $response['access_token']
 					));
 				} else {
@@ -65,5 +65,29 @@ class AppController extends BaseController
 		}
 
     	return redirect('/');
+    }
+
+    /**
+     * Check script tags
+     * @param  Request $request [description]
+     * @return [type]           [description]
+     */
+    public function scriptsTag(Request $request)
+    {
+    	$secretKey = env('SHARED_SECRET');
+    	$shopName = isset($request->shop) ? $request->shop : 'dayoneapp.myshopify.com';
+    	$info = $this->model->getAuth($shopName);
+    	if (isset($info->access_token)) {
+    		$api = new ShopifyApi();
+	    	$api->setVersion('2020-01');
+	    	$api->setShop($shopName);
+	    	$api->setApiKey(env('API_KEY'));
+	    	$api->setApiSecret($secretKey);
+	    	$api->setAccessToken($info->access_token);
+	    	$response = $api->verifyScriptsTag('GET');
+	    	return "[ScripTags]: {$response->status} " . json_encode($response->body);
+    	}
+    	
+    	return 'hi there';
     }
 }

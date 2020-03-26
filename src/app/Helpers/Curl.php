@@ -162,7 +162,7 @@ class Curl
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, $this->timeout);
         curl_setopt($this->ch, CURLOPT_TIMEOUT, $this->timeout);
-
+        
         #Detect method
         if ($this->method === self::HTTP_PUT) {
             curl_setopt($this->ch, CURLOPT_CUSTOMREQUEST, 'PUT');
