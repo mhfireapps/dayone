@@ -21,6 +21,7 @@ Route::get('/scripts-tag', 'AppController@scriptsTag');
 Route::get('/test-webhooks', 'AppController@testWebhooks');
 
 Route::group(['prefix' => 'webhooks'], function() {
+	Route::get('/all', 'WebhookController@all')->middleware('webhook');
 	Route::post('/products', 'WebhookController@products')->middleware('webhook');
 	Route::post('/orders', 'WebhookController@orders')->middleware('webhook');
 	Route::post('/themes/updated', 'WebhookController@themeUpdated')->middleware('webhook');
