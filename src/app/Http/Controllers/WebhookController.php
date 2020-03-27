@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Repositories\AuthRepository;
 use App\Helpers\ShopifyApi;
+use App\Services\WebhookService;
 
 class WebhookController extends Controller
 {
@@ -31,7 +32,7 @@ class WebhookController extends Controller
                 return $resp->body;
             });
 
-            return '[Webhook: list]: ' . $resp;
+            return '[Webhook: list]: ' . json_encode($resp);
         }
 
         return '[Webhook: list]: ' . $shopName;
@@ -46,21 +47,9 @@ class WebhookController extends Controller
     public function orders(Request $request)
     {
     	$bodyContent = $request->getContent();
-        $shopName = isset($request->shop) ? $request->shop : 'dayoneapp.myshopify.com';
-        $info = $this->model->getAuth($shopName);
-        if (isset($info->access_token)) {
-            $api = new ShopifyApi();
-            $api->setVersion($this->apiVersion);
-            $api->setApiKey(env('API_KEY'));
-            $api->setApiSecret($secretKey);
-            $resp = $api->withSession($shopName, $info->access_token, function() {
-                $params = array();
-                $resp = $api->rest('GET', '/admin/api/webhooks.json', $params);
-                return $resp->body;
-            });
-
-            return '[Webhook: orders/create]: ' . $resp;
-        }
+        // To do something
+        $service = new WebhookService();
+        $service->orderCreated($request);
 
         return '[Webhook: orders/create]: ' . $bodyContent;
     }
@@ -68,16 +57,20 @@ class WebhookController extends Controller
     public function themeUpdated(Request $request)
     {
         $bodyContent = $request->getContent();
+        $shopName = isset($request->shop) ? $request->shop : 'dayoneapp.myshopify.com';
+        $info = $this->model->getAuth($shopName);
+        if ( isset($info->access_token) ) {
+            $service = new WebhookService();
+            $service->updateTheme($request, array('access_token' => $info->access_token));
+        }
 
         return '[Webhook: Theme/updated]: ' . $bodyContent;
     }
 
     public function uninstall(Request $request)
     {
-    	$shop_name = isset($request->shop) ? $request->shop : '';
-    	if ($shop_name) {
-    		$this->model->deleteStores($shop_name);
-    	}
+        $service = new WebhookService();
+        $service->uninstall($request);
 
     	return 'Uninstall successfully';
     }
