@@ -18,11 +18,12 @@ Route::get('/', function () {
 Route::get('/install', 'AppController@install');
 Route::get('/auth', 'AppController@auth');
 Route::get('/scripts-tag', 'AppController@scriptsTag');
+Route::get('/test-webhooks', 'AppController@testWebhooks');
 
-Route::group(['prefix' => 'webhook'], function() {
+Route::group(['prefix' => 'webhooks'], function() {
 	Route::post('/products', 'WebhookController@products')->middleware('webhook');
-	Route::post('/orders', 'WebhookController@orders')->middleware('webhook');;
-	Route::post('/thenes', 'WebhookController@themes')->middleware('webhook');;
-	Route::post('/uninstall', 'WebhookController@uninstall')->middleware('webhook');;
-	Route::post('/shop', 'WebhookController@shop')->middleware('webhook');;
+	Route::post('/orders', 'WebhookController@orders')->middleware('webhook');
+	Route::post('/themes/updated', 'WebhookController@themeUpdated')->middleware('webhook');
+	Route::post('/uninstall', 'WebhookController@uninstall')->middleware('webhook');
+	Route::post('/shop', 'WebhookController@shop')->middleware('webhook');
 });

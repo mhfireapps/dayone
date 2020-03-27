@@ -385,53 +385,8 @@ class ShopifyApi implements LoggerAwareInterface
         }
 
         $path = '/admin/api/script_tags.json';
-        $uri = $this->getBaseUri()->withPath($this->versionPath($path));
-        $this->log("[{$uri}:{$type}] Request params: " . json_encode($params));
 
-        $requestFn = function() use ($type, $uri, $params) {
-        	return $this->client->request($type, $uri, $params);
-        };
-
-        $successFn = function(ResponseInterface $resp) use ($uri, $type): stdClass {
-        	$body = $resp->getBody();
-        	$status = $resp->getStatusCode();
-        	$this->log("[{$uri}:{$type}] {$status}: " . json_encode($body));
-
-        	return (object) [
-        		'errors' 	=> false,
-        		'status' 	=> $status,
-        		'response' 	=> $resp,
-        		'body'     	=> $this->jsonDecode($body)
-        	];
-        };
-
-        $errorFn = function(RequestException $e) use ($uri, $type): stdClass {
-        	$resp = $e->getResponse();
-        	$body = $reqp->getBody();
-        	$status = $resp->getStatusCode();
-
-        	$body = $this->jsonDecode($body);
-        	if ($body) {
-        		if (isset($body->errors)) {
-        			$body = $body->errors;
-        		} else {
-        			$body = null;
-        		}
-        	}
-
-        	return (object) [
-        		'errors' 	=> true,
-        		'status' 	=> $status,
-        		'body'   	=> $body,
-        		'exception' => $e
-        	];
-        };
-
-        try {
-        	return $successFn($requestFn());
-        } catch( RequestException $e) {
-        	return $errorFn($e);
-        }
+        return $this->rest('GET', $path);
     }
 
     /**
@@ -475,7 +430,7 @@ class ShopifyApi implements LoggerAwareInterface
 
         $errorFn = function(RequestException $e) use ($uri, $type): stdClass {
         	$resp = $e->getResponse();
-        	$body = $reqp->getBody();
+        	$body = $resp->getBody();
         	$status = $resp->getStatusCode();
 
         	$body = $this->jsonDecode($body);

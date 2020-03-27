@@ -90,4 +90,29 @@ class AppController extends BaseController
     	
     	return 'hi there';
     }
+
+    /**
+     * Check script tags
+     * @param  Request $request [description]
+     * @return [type]           [description]
+     */
+    public function testWebhooks(Request $request)
+    {
+        $secretKey = env('SHARED_SECRET');
+        $shopName = isset($request->shop) ? $request->shop : 'dayoneapp.myshopify.com';
+        $info = $this->model->getAuth($shopName);
+        if (isset($info->access_token)) {
+            $api = new ShopifyApi();
+            $api->setVersion('2020-01');
+            $api->setShop($shopName);
+            $api->setApiKey(env('API_KEY'));
+            $api->setApiSecret($secretKey);
+            $api->setAccessToken($info->access_token);
+            $params = array();
+            $response = $api->rest('GET', '/admin/api/webhooks.json');
+            return "[WebHooks]: {$response->status} " . json_encode($response->body);
+        }
+        
+        return 'hi there';
+    }
 }

@@ -17,17 +17,20 @@ class WebhookController extends Controller
 
     public function products(Request $request)
     {
-    	
+    	$bodyContent = $request->getContent();
+        return '[Webhook: products]: ' . $bodyContent;
     }
 
     public function orders(Request $request)
     {
-    	// Todo domething
+    	$bodyContent = $request->getContent();
+        return '[Webhook: orders/create]: ' . $bodyContent;
     }
 
-    public function themes(Request $request)
+    public function themeUpdated(Request $request)
     {
-    	// Todo domething
+        $bodyContent = $request->getContent();
+        return '[Webhook: Theme/updated]: ' . $bodyContent;
     }
 
     public function uninstall(Request $request)
