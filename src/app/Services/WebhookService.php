@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use Illuminate\Http\Request;
+use App\Jobs\RegisterUninstallShopifyWebhook;
+
 class WebhookService
 {
 	public function uninstall(Request $request)
