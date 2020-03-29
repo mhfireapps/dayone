@@ -1,7 +1,10 @@
 version: '3'
 
 networks:
-  laravel:
+  dayone:
+
+volumes:
+  pgdata:
 
 services:
   nginx:
@@ -14,9 +17,39 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - php
+      - psql
       - mysql
     networks:
-      - laravel
+      - dayone
+
+  psql:
+    image: postgres:alpine
+    container_name: psql
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - "3452:5432"
+    networks:
+      - dayone
+
+  pgadmin:
+    image: dpage/pgadmin4:4.16
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.local
+      PGADMIN_DEFAULT_PASSWORD: 123456
+    ports:
+      - 7878:80
+    depends_on:
+      - psql
+    networks:
+      - dayone
+    logging:
+      driver: none
 
   mysql:
     image: mysql:5.7.29
@@ -24,7 +57,7 @@ services:
     restart: unless-stopped
     tty: true
     ports:
-      - "3306:3306"
+      - "3307:3307"
     environment:
       MYSQL_DATABASE: dayone
       MYSQL_USER: root
@@ -33,7 +66,7 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     networks:
-      - laravel
+      - dayone
 
   php:
     build:
@@ -45,7 +78,7 @@ services:
     ports:
       - "9000:9000"
     networks:
-      - laravel
+      - dayone
 
   composer:
     image: composer:latest
@@ -56,7 +89,7 @@ services:
     depends_on:
       - php
     networks:
-      - laravel
+      - dayone
 
   npm:
     image: node:13.7
@@ -74,8 +107,9 @@ services:
     volumes:
       - ./src:/var/www/html
     depends_on:
+      - psql
       - mysql
     working_dir: /var/www/html
     entrypoint: ['/var/www/html/artisan']
     networks:
-      - laravel
+      - dayone

@@ -22,8 +22,9 @@ class AuthRepository
 		if ($this->isValid($response) === false)
 			return false;
 
-		if ($this->getAuth($response['store_url']))
+		if ($this->getAuth($response['store_url'])) {
 			return;
+		}
 
 		$this->model->access_token = $response['access_token'];
 		$this->model->store_url = $response['store_url'];
@@ -46,8 +47,6 @@ class AuthRepository
 
 		$results = $this->model
 					  ->where('store_url', $store_url)
-					  ->select('id', 'access_token')
-					  ->get()
 					  ->first();
 
 		return $results;

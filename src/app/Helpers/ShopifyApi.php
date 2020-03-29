@@ -61,7 +61,7 @@ class ShopifyApi implements LoggerAwareInterface
 	 * Version of API
 	 * @var [type]
 	 */
-	protected $version;
+	protected $version = '2020-01';
 
 	public function __construct(bool $private = false)
 	{
@@ -160,7 +160,7 @@ class ShopifyApi implements LoggerAwareInterface
 	 * @throws Exception When closure is missing or not callable
 	 * @return mixed
 	 */
-	public function withSession(string $shop, string $accessToken, Closurse $closure)
+	public function withSession(string $shop, string $accessToken, Closure $closure)
 	{
 		$this->log('WithSession started for ' . $shop);
 
@@ -356,7 +356,7 @@ class ShopifyApi implements LoggerAwareInterface
      * @param string $json The JSON body.
      * @return stdClass The decoded JSON.
      */
-    protected function jsonDecode($json): stdClass
+    protected function jsonDecode($json)
     {
         // From firebase/php-jwt
         if (!(defined('JSON_C_VERSION') && PHP_INT_SIZE > 4)) {

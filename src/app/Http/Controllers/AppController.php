@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use App\Repositories\AuthRepository;
 use App\Helpers\ShopifyApi;
+use Illuminate\Support\Facades\Log;
 
 class AppController extends BaseController
 {
@@ -25,8 +26,8 @@ class AppController extends BaseController
     {
     	$shopName = isset($request->shop) ? $request->shop : '';
     	if ($shopName) {
-    		$scopes = 'read_script_tags,write_script_tags';
-		    $url = 'https://'.$shopName.'/admin/oauth/authorize?client_id='.env('API_KEY').'&scope='.$scopes.'&redirect_uri='.env('APP_URL').'/auth';
+    		$scopes = 'read_script_tags,write_script_tags,read_themes,write_themes';
+		    $url = 'https://'.$shopName.'/admin/oauth/authorize?client_id='.env('API_KEY').'&scope='.$scopes.'&redirect_uri='.env('APP_URL').'/auth&grant_options[]=offline';
 		    return redirect($url);
     	}
 
@@ -101,6 +102,7 @@ class AppController extends BaseController
         $secretKey = env('SHARED_SECRET');
         $shopName = isset($request->shop) ? $request->shop : 'dayoneapp.myshopify.com';
         $info = $this->model->getAuth($shopName);
+
         if (isset($info->access_token)) {
             $api = new ShopifyApi();
             $api->setVersion('2020-01');

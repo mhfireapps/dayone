@@ -38,45 +38,71 @@ class WebhookController extends Controller
         return '[Webhook: list]: ' . $shopName;
     }
 
-    public function products(Request $request)
-    {
-    	$bodyContent = $request->getContent();
-        return '[Webhook: products]: ' . $bodyContent;
-    }
-
-    public function orders(Request $request)
-    {
-    	$bodyContent = $request->getContent();
-        // To do something
-        $service = new WebhookService();
-        $service->orderCreated($request);
-
-        return '[Webhook: orders/create]: ' . $bodyContent;
-    }
-
     public function themeUpdated(Request $request)
     {
-        $bodyContent = $request->getContent();
-        $shopName = isset($request->shop) ? $request->shop : 'dayoneapp.myshopify.com';
+        $shopName = isset($request->shop) ? $request->shop : '';
         $info = $this->model->getAuth($shopName);
         if ( isset($info->access_token) ) {
             $service = new WebhookService();
             $service->updateTheme($request, array('access_token' => $info->access_token));
         }
 
-        return '[Webhook: Theme/updated]: ' . $bodyContent;
+        return '[Webhook: Theme/updated]: Success';
+    }
+
+    public function products(Request $request)
+    {
+    	$bodyContent = $request->getContent();
+        return '[Webhook: products]: successfully';
+    }
+
+    public function orderCreate(Request $request)
+    {
+        // To do something
+        $service = new WebhookService();
+        $service->orderCreated($request);
+
+        return '[Webhook: orders/create]: successfully';
+    }
+
+    public function orderDelete(Request $request)
+    {
+        return '[Webhook: Order/Delete]: Success';
     }
 
     public function uninstall(Request $request)
     {
+        // Todo something
         $service = new WebhookService();
         $service->uninstall($request);
 
     	return 'Uninstall successfully';
     }
 
-    public function shop(Request $request)
+    public function updateShop(Request $request)
     {
-    	// Todo domething
+        // Todo something
+    	$service = new WebhookService();
+        $service->updateShop($request);
+
+        return '[Webhook: Shop/updated]: Success';
+    }
+
+    public function customerCreate(Request $request)
+    {
+        // Todo something
+        $service = new WebhookService();
+        $service->customerCreate($request);
+
+        return '[Webhook: Customer/Created]: Success';
+    }
+
+    public function customerDelete(Request $request)
+    {
+        // Todo something
+        $service = new WebhookService();
+        $service->customerDelete($request);
+
+        return '[Webhook: Customer/Deleted]: Success';
     }
 }

@@ -22,9 +22,12 @@ Route::get('/test-webhooks', 'AppController@testWebhooks');
 
 Route::group(['prefix' => 'webhooks'], function() {
 	Route::get('/all', 'WebhookController@all')->middleware('webhook');
-	Route::post('/products', 'WebhookController@products')->middleware('webhook');
-	Route::post('/orders', 'WebhookController@orders')->middleware('webhook');
-	Route::post('/themes/updated', 'WebhookController@themeUpdated')->middleware('webhook');
-	Route::post('/uninstall', 'WebhookController@uninstall')->middleware('webhook');
-	Route::post('/shop', 'WebhookController@shop')->middleware('webhook');
+	Route::any('/products', 'WebhookController@products')->middleware('webhook');
+	Route::any('/orders', 'WebhookController@orderCreate')->middleware('webhook');
+	Route::any('/orders/delete', 'WebhookController@orderDelete')->middleware('webhook');
+	Route::any('/themes/updated', 'WebhookController@themeUpdated')->middleware('webhook');
+	Route::any('/uninstall', 'WebhookController@uninstall')->middleware('webhook');
+	Route::any('/shop/update', 'WebhookController@updateShop')->middleware('webhook');
+	Route::any('/customer/create', 'WebhookController@customerCreate')->middleware('webhook');
+	Route::any('/customer/delete', 'WebhookController@customerDelete')->middleware('webhook');
 });
