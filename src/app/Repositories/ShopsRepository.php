@@ -3,7 +3,7 @@ namespace App\Repositories;
 
 use App\Models\Shops;
 
-class AuthRepository
+class ShopsRepository
 {
 	protected $model;
 

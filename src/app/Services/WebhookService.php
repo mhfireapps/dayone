@@ -4,14 +4,14 @@ namespace App\Services;
 
 use Illuminate\Http\Request;
 use App\Jobs\DetectScriptTag;
-use Illuminate\Support\Facades\Log;
+use App\Repositories\BaseRepository;
 
 class WebhookService
 {
 	public function uninstall(Request $request)
 	{
 		$shop_url = $request->shop ?? null;
-		$shop = app('AuthRepository')->deleteStores($shop_url);
+		$shop = app(BaseRepository::AUTH)->deleteStores($shop_url);
 	}
 
 	public function updateTheme(Request $request, array $params = null)
@@ -27,24 +27,24 @@ class WebhookService
 	public function orderCreated(Request $request)
 	{
 		//To do Something
-		$orderService = app('OrderRepository')->orderCreated($request);
+		$orderService = app(BaseRepository::ORDER)->orderCreated($request);
 	}
 
 	public function updateShop(Request $request)
 	{
 		//To do Something
-		$shopService = app('ShopsRepository')->saveData($request);
+		$shopService = app(BaseRepository::SHOP)->saveData($request);
 	}
 
 	public function customerCreate(Request $request)
 	{
 		//To do Something
-		$customerService = app('CustomerRepository')->saveData($request);
+		$customerService = app(BaseRepository::CUSTOMER)->saveData($request);
 	}
 
 	public function customerDelete(Request $request)
 	{
 		//To do Something
-		$customerService = app('CustomerRepository')->saveData($request);
+		$customerService = app(BaseRepository::CUSTOMER)->saveData($request);
 	}
 }
